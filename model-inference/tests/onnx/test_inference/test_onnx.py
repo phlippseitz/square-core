@@ -1,6 +1,94 @@
 import numpy as np
 import pytest
 from model_inference.app.models.request import Task
+from huggingface_hub.utils import RepositoryNotFoundError
+
+@pytest.mark.usefixtures("test_onnx_question_answering")
+class TestOnnxQuestionAnswering:
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "input",
+        [
+            ([["What is a test?", "A test is a thing where you test."]]),
+            (
+                [
+                    ["What is a test?", "A test is a thing where you test."],
+                    [
+                        "What is a longer test?",
+                        "A test is a thing where you test. If it is longer you call it longer",
+                    ],
+                ]
+            ),
+        ],
+    )
+    async def test_question_answering(self, prediction_request, test_onnx_question_answering, input):
+        prediction_request.input = input
+        prediction_request.task_kwargs = {"topk": 1}
+
+        prediction = test_onnx_question_answering.predict(prediction_request, Task.question_answering)
+        answers = [
+            input[i][1][prediction.answers[i][0].start : prediction.answers[i][0].end] for i in range(len(input))
+        ]
+        assert "start_logits" in prediction.model_outputs and "end_logits" in prediction.model_outputs
+        assert len(prediction.answers) == len(input)
+        assert all(prediction.answers[i][0].answer == answers[i] for i in range(len(input)))
+
+    @pytest.mark.asyncio
+    async def test_question_answering_topk(self, prediction_request, test_onnx_question_answering):
+        input = [["What is a test?", "A test is a thing where you test."]]
+        prediction_request.input = input
+        prediction_request.task_kwargs = {"topk": 2}
+
+        prediction = test_onnx_question_answering.predict(prediction_request, Task.question_answering)
+        answers = [input[0][1][prediction.answers[0][i].start : prediction.answers[0][i].end] for i in range(2)]
+        assert "start_logits" in prediction.model_outputs and "end_logits" in prediction.model_outputs
+        assert len(prediction.answers) == len(input)
+        assert prediction.answers[0][0].score >= prediction.answers[0][1].score
+        assert all(prediction.answers[0][i].answer == answers[i] for i in range(2))
+
+
+@pytest.mark.usefixtures("test_onnx_quantized_question_answering")
+class TestOnnxQuantizedQuestionAnswering:
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "input",
+        [
+            ([["What is a test?", "A test is a thing where you test."]]),
+            (
+                [
+                    ["What is a test?", "A test is a thing where you test."],
+                    [
+                        "What is a longer test?",
+                        "A test is a thing where you test. If it is longer you call it longer",
+                    ],
+                ]
+            ),
+        ],
+    )
+    async def test_question_answering(self, prediction_request, test_onnx_quantized_question_answering, input):
+        prediction_request.input = input
+        prediction_request.task_kwargs = {"topk": 1}
+
+        prediction = test_onnx_quantized_question_answering.predict(prediction_request, Task.question_answering)
+        answers = [
+            input[i][1][prediction.answers[i][0].start : prediction.answers[i][0].end] for i in range(len(input))
+        ]
+        assert "start_logits" in prediction.model_outputs and "end_logits" in prediction.model_outputs
+        assert len(prediction.answers) == len(input)
+        assert all(prediction.answers[i][0].answer == answers[i] for i in range(len(input)))
+
+    @pytest.mark.asyncio
+    async def test_question_answering_topk(self, prediction_request, test_onnx_quantized_question_answering):
+        input = [["What is a test?", "A test is a thing where you test."]]
+        prediction_request.input = input
+        prediction_request.task_kwargs = {"topk": 2}
+
+        prediction = test_onnx_quantized_question_answering.predict(prediction_request, Task.question_answering)
+        answers = [input[0][1][prediction.answers[0][i].start : prediction.answers[0][i].end] for i in range(2)]
+        assert "start_logits" in prediction.model_outputs and "end_logits" in prediction.model_outputs
+        assert len(prediction.answers) == len(input)
+        assert prediction.answers[0][0].score >= prediction.answers[0][1].score
+        assert all(prediction.answers[0][i].answer == answers[i] for i in range(2))
 
 
 @pytest.mark.usefixtures("test_onnx_sequence_classification")
@@ -176,54 +264,6 @@ class TestOnnxEmbedding:
 
         with pytest.raises(ValueError):
             prediction = test_onnx_embedding.predict(prediction_request, Task.embedding)
-
-
-@pytest.mark.usefixtures("test_onnx_question_answering")
-class TestOnnxQuestionAnswering:
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "input",
-        [
-            ([["What is a test?", "A test is a thing where you test."]]),
-            (
-                [
-                    ["What is a test?", "A test is a thing where you test."],
-                    [
-                        "What is a longer test?",
-                        "A test is a thing where you test. If it is longer you call it longer",
-                    ],
-                ]
-            ),
-        ],
-    )
-    async def test_question_answering(self, prediction_request, test_onnx_question_answering, input):
-        if test_onnx_question_answering is None:
-            pytest.skip("No model found.")
-        prediction_request.input = input
-        prediction_request.task_kwargs = {"topk": 1}
-
-        prediction = test_onnx_question_answering.predict(prediction_request, Task.question_answering)
-        answers = [
-            input[i][1][prediction.answers[i][0].start : prediction.answers[i][0].end] for i in range(len(input))
-        ]
-        assert "start_logits" in prediction.model_outputs and "end_logits" in prediction.model_outputs
-        assert len(prediction.answers) == len(input)
-        assert all(prediction.answers[i][0].answer == answers[i] for i in range(len(input)))
-
-    @pytest.mark.asyncio
-    async def test_question_answering_topk(self, prediction_request, test_onnx_question_answering):
-        if test_onnx_question_answering is None:
-            pytest.skip("No model found.")
-        input = [["What is a test?", "A test is a thing where you test."]]
-        prediction_request.input = input
-        prediction_request.task_kwargs = {"topk": 2}
-
-        prediction = test_onnx_question_answering.predict(prediction_request, Task.question_answering)
-        answers = [input[0][1][prediction.answers[0][i].start : prediction.answers[0][i].end] for i in range(2)]
-        assert "start_logits" in prediction.model_outputs and "end_logits" in prediction.model_outputs
-        assert len(prediction.answers) == len(input)
-        assert prediction.answers[0][0].score >= prediction.answers[0][1].score
-        assert all(prediction.answers[0][i].answer == answers[i] for i in range(2))
 
 
 @pytest.mark.usefixtures("test_onnx_generation")
