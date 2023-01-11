@@ -1,5 +1,5 @@
 @domain_dev = square.ukp-lab.localhost
-@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJwcmVmZXJyZWRfdXNlcm5hbWUiOiJMT0NBTF9TUVVBUkVfVVNFUiIsImlzcyI6Ii9MT0NBTF9TUVVBUkVfUkVBTE0iLCJleHAiOjk5OTk5OTk5OTl9.DJZonR1DWkX4do5rR4rx_N63wp-P-zWlQxNPo2c3xJy2dZ7gWS0c9nR16A9O7rAYX7M9D_4g2qcHzhhuyCpBkKWzpVRn2w6N5PaU1URu0NgoIfXA20O0KRtRLsX7ubWBya-HA5Zp_6Rc2qbxVv1OsbTOzAEuDsb5NMC4r5mZfCpQSQheR9BCk3ZF0d9REvziReJiO5nwV2wsdILTWiQoQYm1HukOQQVB0lZfGeiERzz14ztmSivzRSxnCy_NWrK6b8oK5uOPSWEtzwqkGWeAkO97obPiK5ukQuB1eMPE0vktENlRlYs7mF6SIayYj2DZ13YYbBd67qQfOGChvlp0zghBvZCtovuEQDe9tquoHE3IGLItbeF7IOEd7hz5g6HExIKZEB4AiNuqJ0LKzDW_19-Houjy09Al1gUbpL5xNfncXYxS_dbniMnRddJKDyAvNW907aBs7GHZGUctrmIXtVtiyGLsKlb9jrdCUDJWly0evmCyF_DuFUt2WRV-g1k0lI9GG4Mgs5WXxFcCxpIK8G4Q4B9Ww4jN9b6jp9pGNH-FaV2ttmhHLb4PB9X6W__vs7FsA4a8Dj-xdC7hvRQfakkNCXrnj6ADYYNjpeaBBYv2PCxxoqHZHbwLbxC07BGBXGAHREJt8uZbIXf5N5Mf31TULOuDWmDIjGIl7OfDM8U
+@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJwcmVmZXJyZWRfdXNlcm5hbWUiOiJMT0NBTF9TUVVBUkVfVVNFUiIsImlzcyI6Ii9MT0NBTF9TUVVBUkVfUkVBTE0iLCJleHAiOjk5OTk5OTk5OTl9.LikKZZoeyBeUC8fKG0HaIxinIu-Aq1WhABlkRiDPvE-jS8v06NVqztLXGgXp2DIigdzZ360pRK2_B7HI3PANto11KO-uHVOthC8_FGmKhAk5ZbfDaLTC1VX1YqZyUrJEulfvbZsjCT6ba-hcfYpFPGX2wzjHnPoHrHm6wr3bh39x6cE6iMmhe-svp3E-g6VAgAdMB_HhLoTQYtPpg3XK2Ozfm64Ejdsnzrh3Dwgf0a1BNTp_GtWw2cE4HR1Tvna0pRcUgBbQF4HfzOfaXZ6_bf141d3FXBhXNq9KlRBnZCHBpmuBpWAO_PyVe30FltUQ-a0n-5bXn6i2ZdF5E4A298MwnJSua9KIAgN3e6qPIMLexXtodYlqItdcmnLC0T5Pli7WnURRW4W3uXP2flRu68fyupzQ8RCIDYlrGk-lATUF6ffs-PsB8nRAouUvhoiQREiFquMHTEHW0FdUumusjDWIjffFFHCnjPtoCjDXwCbf8C4AiHnPeN4QG69Fynnvs8l83RYp8jbTCpe0t3ox4yu1ruDHhcAQ_QFM3IUB8n9lukpWnyijB5eFESV3bd2Y3ABMp_jaGi7JKWbYr6zoVSYp_hQnYqsR05EXrG30mYDDuPO_dDZ1jHz70-HOd6Xbq_xlj_Wob1B5CTqtqOaa1T9XaVJ0GaLFyL3KUQEA8zo
 
 ### Check heartbeat
 ## @name health
@@ -43,7 +43,7 @@ Content-Type: application/json
 
 ###
 # @name squad_roberta_onnx
-POST {{domain_dev}}/api/main/roberta-base-uncased-pf-squad-onnx/question-answering
+POST {{domain_dev}}/api/main/roberta-base-pf-squad-onnx/question-answering
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -60,10 +60,62 @@ Content-Type: application/json
  "adapter_name": ""
 }
 
+###
+# @name boolq_roberta_onnx
+POST {{domain_dev}}/api/main/roberta-base-pf-boolq-onnx/sequence-classification
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+ "input": [
+ [
+  "is a wolverine the same as a badger",
+  "Badgers are short-legged omnivores in the family Mustelidae, which also includes the otters, polecats, weasels, and wolverines. They belong to the caniform suborder of carnivoran mammals. The 11 species of badgers are grouped in three subfamilies: Melinae (Eurasian badgers), Mellivorinae (the honey badger or ratel), and Taxideinae (the American badger). The Asiatic stink badgers of the genus Mydaus were formerly included within Melinae (and thus Mustelidae), but recent genetic evidence indicates these are actually members of the skunk family, placing them in the taxonomic family Mephitidae."]
+ ],
+ "is_preprocessed": false,
+ "preprocessing_kwargs": {},
+ "model_kwargs": {},
+ "task_kwargs": {},
+ "adapter_name": ""
+}
+
+###
+# @name quartz_roberta_onnx
+POST {{domain_dev}}/api/main/roberta-base-pf-quartz-onnx/sequence-classification
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+ "input": [
+ [
+  "What animal has the most hair? Fish",
+    "Fish are typically not hairy. Horses have 100g of hair. Cats have 10g of hair. Tigers have 12g of hair."
+ ],
+ [
+  "What animal has the most hair? Cats",
+    "Fish are typically not hairy. Horses have 100g of hair. Cats have 10g of hair. Tigers have 12g of hair."
+  ],
+  [
+    "What animal has the most hair? Horses",
+    "Fish are typically not hairy. Horses have 100g of hair. Cats have 10g of hair. Tigers have 12g of hair."
+  ],
+   [
+    "What animal has the most hair? Tigers",
+  "Fish are typically not hairy. Horses have 100g of hair. Cats have 10g of hair. Tigers have 12g of hair."
+  ]
+ ],
+ "is_preprocessed": false,
+ "preprocessing_kwargs": {},
+ "model_kwargs": {},
+ "task_kwargs": {
+  "multiple_choice": true
+ },
+ "adapter_name": ""
+}
 
 
 ####
 # @name get_results
-GET {{domain_dev}}/api/main/task_result/9688f0fc-766e-43f2-aa3f-5f98475972f2
+GET {{domain_dev}}/api/main/task_result/23c3b743-9e21-4a6a-bf77-593684b9f9bc
 Authorization: Bearer {{token}}
 Content-Type: application/json

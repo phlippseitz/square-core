@@ -4,6 +4,7 @@ from typing import Tuple, Union
 import logging
 import numpy as np
 import onnxruntime
+
 import torch
 import json
 from model_inference.tasks.config.model_config import model_config
@@ -83,9 +84,6 @@ class Onnx(Transformer):
                 raise
             return model_path
 
-        # load tokenizer of base_model
-        
-
         # load model and create onnx session
         filename = "model_quant.onnx" if load_quantized else "model.onnx" 
         model_path = download_model(repo_id="UKP-SQuARE/"+model_name, filename=filename)
@@ -149,7 +147,18 @@ class Onnx(Transformer):
                 if k in input_names
             )
 
+            if request.task_kwargs.get("multiple_choice", False):
+                # Multiple choice QA with ONNX expects input dimension expansion
+                ort_inputs = dict(
+                    (
+                        k,
+                        np.expand_dims(v, axis=0)
+                    )
+                    for k, v in ort_inputs.items()
+                )
+            
             res = self.session.run([], ort_inputs)
+
             if self.is_encoder_decoder:
                 if self.decoder_session:
                     # Prepare decoder input
@@ -246,13 +255,22 @@ class Onnx(Transformer):
                  The prediction output containing the predicted labels
         """
         predictions = self._predict(request)
+
+        # Some models use last_hidden_state instead of logits
+        if "logits" not in predictions.keys() and "last_hidden_state" in predictions.keys():
+            predictions["logits"] = predictions["last_hidden_state"]
+
         task_outputs = {}
         # If logits dim > 1 or if the 'is_regression' flag is not set, we assume classification:
         # We replace the logits by the softmax and add labels chosen with argmax
-        if predictions["logits"].size()[-1] != 1 and not request.task_kwargs.get("is_regression", False):
+        if predictions["logits"].size()[-1] != 1 and not request.task_kwargs.get("is_regression", False) and not request.task_kwargs.get("multiple_choice", False):
             probabilities = torch.softmax(predictions["logits"], dim=-1)
             predictions["logits"] = probabilities
             task_outputs["labels"] = torch.argmax(predictions["logits"], dim=-1).tolist()
+        elif request.task_kwargs.get("multiple_choice", False):
+            probabilities = torch.softmax(predictions["logits"].flatten(), dim=-1)
+            predictions["logits"] = probabilities
+            task_outputs["labels"] = [torch.argmax(predictions["logits"])]
 
         return PredictionOutputForSequenceClassification(model_outputs=predictions, **task_outputs)
 
